@@ -59,29 +59,29 @@
 
 # PARAMS 
 
-## StringMapper
+- **StringMapper**
 
-    * StringMapper can be HASHRef or multiple StringMappers as ARRAY of HASHRefs.
-    * If Multiple StringMappers exist, Based on Rule apropriate StringMapper will get selected.
-    * In Multiple StringMappers, Its better to place Rule-less mapper after Rule based mappers.
-         * Rule-less mapper will picked as soon as its get access in an array
-    * StringMapper fields should be defined as ARRAY, First element as StringPoint of string and Second element as length of the string.
-    * Rule, Expression are keywords, overriding or changing those will affect the functionality.
+        * StringMapper can be HASHRef or multiple StringMappers as ARRAY of HASHRefs.
+        * If Multiple StringMappers exist, Based on Rule apropriate StringMapper will get selected.
+        * In Multiple StringMappers, Its better to place Rule-less mapper after Rule based mappers.
+             * Rule-less mapper will picked as soon as its get access in an array
+        * StringMapper fields should be defined as ARRAY, First element as StringPoint of string and Second element as length of the string.
+        * Rule, Expression are keywords, overriding or changing those will affect the functionality.
 
-## ConcateString
+- **ConcateString**
 
-    * StringMapper can have field values can be defined as {Address => [24, 2, 26, 14]}, 
-    * This reperesents Address field will value will be concatenation of two strings, 
-      which are has Startingpoint 24, Length 2 and Startingpoint 26, Lenght 14.
-    * While concatenate those two strings value of ConcateString String will be used in between those .
-          Eg: ConcateString = '-';  
-          The Value of Address = 84-SOUTH STREET    
-    * Space(' ') is default ConcateString
+        * StringMapper can have field values can be defined as {Address => [24, 2, 26, 14]}, 
+        * This reperesents Address field will value will be concatenation of two strings, 
+          which are has Startingpoint 24, Length 2 and Startingpoint 26, Lenght 14.
+        * While concatenate those two strings value of ConcateString String will be used in between those .
+              Eg: ConcateString = '-';  
+              The Value of Address = 84-SOUTH STREET    
+        * Space(' ') is default ConcateString
 
-## EmptyAsUndef
+- **EmptyAsUndef**
 
-    * If this flag is enabled, Empty values will be assigned as undef
-        * Eg: Name = '', it will be assigned as Name = undef
+        * If this flag is enabled, Empty values will be assigned as undef
+            * Eg: Name = '', it will be assigned as Name = undef
 
 # METHODS
 
@@ -196,7 +196,7 @@
 
 # LICENSE
 
-Copyright (C) 2016 Venkatesan Narayanan
+This library is free software; you can redistribute and/or modify it under the same terms as Perl itself.
 
 # AUTHORS
 

@@ -1,0 +1,26 @@
+
+use strict;
+use warnings;
+
+use 5.10.1;
+
+use ExtUtils::MakeMaker;
+
+my %wm = (
+	NAME         => 'Text::FixedWidth::Parser',
+	DISTNAME     => 'Text-FixedWidth-Parser',
+	ABSTRACT     => 'FixedWidth text file parser',
+	AUTHOR       => 'Venkatesan Narayanan',
+	VERSION_FROM => 'lib/Text/FixedWidth/Parser.pm',
+	PREREQ_PM    => {
+		'Moose'            => 0,
+		'Math::Expression' => 0,
+		'Test::Most'       => 0,
+		'Test::Class'      => 0,
+	},
+);
+
+$ExtUtils::MakeMaker::VERSION > 6.30 and $wm{LICENSE} = "perl";
+
+WriteMakefile(%wm);
+
