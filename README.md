@@ -1,6 +1,6 @@
 # NAME
 
-        Text::FixedWidth::Parser 
+        Text::FixedWidth::Parser - Used to parse the fixed width text file 
 
 # DESCRIPTION
 

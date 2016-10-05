@@ -7,13 +7,13 @@ package Text::FixedWidth::Parser;
 use Moose;
 use Math::Expression;
 
-our $VERSION = '0.1';
+our $VERSION = '0.2';
 
 # ========================================================================== #
 
 =head1 NAME
 
-	Text::FixedWidth::Parser 
+	Text::FixedWidth::Parser - Used to parse the fixed width text file 
 
 =head1 DESCRIPTION
 

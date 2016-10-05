@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 
@@ -20,7 +19,19 @@ my %wm = (
 	},
 );
 
+
 $ExtUtils::MakeMaker::VERSION > 6.30 and $wm{LICENSE} = "perl";
+
+$ExtUtils::MakeMaker::VERSION > 6.46 and $wm{META_MERGE} = {
+	'meta-spec' => { version => 2 },
+	'resources' => {
+		'repository'  => {
+			type => 'git',
+			url => 'https://github.com/VenkatesanNarayanan/Text-FixedWidth-Parser.git',
+			web => 'https://github.com/VenkatesanNarayanan/Text-FixedWidth-Parser'
+		}
+	}
+};
 
 WriteMakefile(%wm);
 
