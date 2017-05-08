@@ -1,6 +1,7 @@
 MANIFEST
 Makefile.PL
 README.md
+Changes
 lib/Text/FixedWidth/Parser.pm
 t/Test/Text/FixedWidth/Parser.pm
 t/run.t

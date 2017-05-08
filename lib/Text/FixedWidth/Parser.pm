@@ -6,10 +6,15 @@ package Text::FixedWidth::Parser;
 
 use Moose;
 use Math::Expression;
+use DateTime::Format::Strptime;
 
-our $VERSION = '0.2';
+our $VERSION = '0.3';
 
 # ========================================================================== #
+
+=pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -27,9 +32,9 @@ our $VERSION = '0.2';
   FileData
   ~~~~~~~~
   ADDRESS001XXXXX YYYYYYY84 SOUTH STREET USA
-  MARK00182869890         
+  MARK0018286989020140101         
   ADDRESS002YYYYYYY      69 BELL STREET  UK 
-  MARK00288698939         
+  MARK0028869893920140101         
 
   my $string_mapper = [
         {
@@ -47,11 +52,14 @@ our $VERSION = '0.2';
                 LinePrefix => [1, 4],
                 Expression => "LinePrefix eq 'MARK'"
             },
-            Id    => [5,  3],
-            Mark1 => [8,  2],
-            Mark2 => [10, 2],
-            Mark3 => [12, 2],
-            Mark4 => [14, 3],
+            Id                 => [5,  3],
+            Mark1              => [8,  2],
+            Mark2              => [10, 2],
+            Mark3              => [12, 2],
+            Mark4              => [14, 3],
+            ResultDate         => [15, 8],
+            ResultDatePattern  => '%Y%m%d',
+            ResultDateTimezone => 'America/Chicago'
         }
   ];
  
@@ -62,8 +70,11 @@ our $VERSION = '0.2';
                    #Required Params
                    StringMapper  => $string_mapper,
                    #optional Params
-                   ConcateString => '', 
-                   EmptyAsUndef  => 1
+                   TimestampToEpochFields => ['ResultDate'],
+                   DefaultDatePattern     => '%Y%m%d',
+                   DefaultTimezone        => 'GMT',
+                   ConcateString          => '', 
+                   EmptyAsUndef           => 1
                 }
             );
 
@@ -75,29 +86,61 @@ our $VERSION = '0.2';
 
 =over 4
 
+
 =item B<StringMapper>
 
-    * StringMapper can be HASHRef or multiple StringMappers as ARRAY of HASHRefs.
-    * If Multiple StringMappers exist, Based on Rule apropriate StringMapper will get selected.
-    * In Multiple StringMappers, Its better to place Rule-less mapper after Rule based mappers.
-         * Rule-less mapper will picked as soon as its get access in an array
-    * StringMapper fields should be defined as ARRAY, First element as StringPoint of string and Second element as length of the string.
-    * Rule, Expression are keywords, overriding or changing those will affect the functionality.
+* StringMapper can be HASHRef or multiple StringMappers as ARRAY of HASHRefs
+
+* If Multiple StringMappers exist, Based on Rule apropriate StringMapper will get selected
+
+* In Multiple StringMappers, Its better to place Rule-less mapper after Rule based mappers
+
+* Rule-less mapper will picked as soon as its get access in an array
+
+* StringMapper fields should be defined as ARRAY, First element as StartingPoint of string and Second element as length of the string
+
+* Rule, Expression are keywords, overriding or changing those will affect the functionality
+
+=item B<TimestampToEpochFields>
+
+* TimestampToEpochFields can have ARRAY of timestamp fields which need to be converted as epoch 
+
+* TimestampToEpochFields can have Pattern of the timestamp in StringMapper as field name suffixed with Pattern keyword, Which will override L</"DefaultDatePattern"> for that particular field
+
+  Eg:- FieldName : DOB, DOBPattern => '%Y%m%d'
+
+* see L<STRPTIME PATTERN TOKENS|DateTime::Format::Strptime/"STRPTIME PATTERN TOKENS"> section in DateTime::Format::Strptime for more patterns
+
+* TimestampToEpochFields can have timezone of the timestamp in StringMapper as field name suffixed with Timezone keyword, Which will override L</"DefaultTimezone"> for that particular field
+
+  Eg:- FieldName : DOB, DOBTimezone=> 'GMT'
+
+=item B<DefaultDatePattern>
+
+* DefaultDatePattern can have DatePattern which will be used to convert date to epoch by default
+
+=item B<DefaultTimezone> 
+
+* DefaultTimezone can have timezone which will be used while converting date to epoch
+
 
 =item B<ConcateString>
 
-    * StringMapper can have field values can be defined as {Address => [24, 2, 26, 14]}, 
-    * This reperesents Address field will value will be concatenation of two strings, 
-      which are has Startingpoint 24, Length 2 and Startingpoint 26, Lenght 14.
-    * While concatenate those two strings value of ConcateString String will be used in between those .
-	  Eg: ConcateString = '-';  
-          The Value of Address = 84-SOUTH STREET    
-    * Space(' ') is default ConcateString
+* StringMapper can be defined as {Address => [24, 2, 26, 14]} 
+
+* This represents, Address field value will be concatenation of two strings, which are Startingpoint 24, Length 2 and Startingpoint 26, Length 14
+
+* While concatenating strings, value of I<ConcateString> will be used 
+
+  Eg: ConcateString = '-';  The Value of Address = 84-SOUTH STREET    
+
+* Space(' ') is default ConcateString
 
 =item B<EmptyAsUndef>
     
-    * If this flag is enabled, Empty values will be assigned as undef
-	* Eg: Name = '', it will be assigned as Name = undef
+* If this flag is enabled, Empty values will be assigned as undef
+
+   Eg: Name = '', it will be assigned as Name = undef
 =cut
 
 =back
@@ -180,7 +223,7 @@ has 'ConcateString' => (
 
 =item B<is_empty_undef>
 
-Desc   : This method will indeicate is empty flag enabled or disabled
+Desc   : This method will indicate is empty flag enabled or disabled
 
 Params : NONE
 
@@ -190,7 +233,7 @@ Returns: 1 on enabled, 0 on disabled
 
 =item B<set_empty_undef>
 
-Desc   : This method used to enable or disable EmptyAsUndef flag
+Desc   : This method is used to enable or disable EmptyAsUndef flag
 
 Params : 1 to enable, 0 to disable
 
@@ -205,6 +248,145 @@ has 'EmptyAsUndef' => (
     reader        => 'is_empty_undef',
     writer        => 'set_empty_undef',
     documentation => 'This attribute is used to say set undef where the value is undef'
+);
+
+# ========================================================================== #
+
+=item B<set_timestamp_to_epoch_fields>
+
+Desc   : This method is used to set fields that need to be converted to epoch
+
+Params : [FieldName14,..] 
+
+Returns: NONE
+
+=cut
+
+has 'TimestampToEpochFields' => (
+    is      => 'rw',
+    default => 0,
+    writer  => 'set_timestamp_to_epoch_fields',
+    trigger => sub {
+        my ($self, $new_val, $old_val) = @_;
+        print("Invalid TimestampToEpochFields value, Value should be ARRAYREF\n") and return undef
+          if (ref($new_val) ne 'ARRAY');
+        my $val;
+        $val->{$_} = 1 for (@$new_val);
+        $self->{time_to_epoch_fields} = $val;
+    },
+    documentation => 'This attribute is used to configure fileds that need to be convert as epoch'
+);
+
+# ========================================================================== #
+
+=item B<add_timestamp_to_epoch_fields>
+
+Desc   : This method is used to add fields with existing fields that need to be converted to epoch
+
+Params : [FieldName14,..] 
+
+Returns: NONE
+
+=cut
+
+sub add_timestamp_to_epoch_fields
+{
+    my ($self, $value) = @_;
+
+    print("Invalid TimestampToEpochFields value, Value should be ARRAYREF\n") and return undef
+      if (ref($value) ne 'ARRAY');
+
+    $self->{time_to_epoch_fields}{$_} = 1 for (@$value);
+    push(@{$self->{TimestampToEpochFields}}, @$value);
+}
+
+# ========================================================================== #
+
+=item B<get_timestamp_to_epoch_fields>
+
+Desc   : This method is used to get fields that will be converted to epoch
+
+Params : [FieldName14,..] 
+
+Returns: NONE
+
+=cut
+
+sub get_timestamp_to_epoch_fields
+{
+    my $self = shift;
+
+    my @fields;
+
+    if (defined $self->{time_to_epoch_fields}) {
+        @fields = keys @{$self->{time_to_epoch_fields}};
+    }
+
+    return \@fields;
+}
+
+# ========================================================================== #
+
+=item B<set_default_date_pattern>
+
+Desc   : This method is used to set date format which will be used to convert the date to epoch. '%Y%m%d' is default DatePattern.
+
+Params : DatePattern eg:- '%Y%m%d'
+
+Returns: NONE
+
+=cut
+
+=item B<get_default_date_pattern>
+
+Desc   : This method will return the date format which will be used to convert the date to epoch. 
+
+Params : NONE
+
+Returns: DatePattern eg:- '%Y%m%d' 
+
+=cut
+
+has 'DefaultDatePattern' => (
+    is      => 'rw',
+    isa     => 'Str',
+    writer  => 'set_default_date_pattern',
+    reader  => 'get_default_date_pattern',
+    default => '%Y%m%d',
+    lazy    => 1,
+    documentation =>
+      'This attribute is used to configure the default date format which will be used to convert date to epoch'
+);
+
+# ========================================================================== #
+
+=item B<set_default_timezone>
+
+Desc   : This method is used to set timezone which will be used while converting date to epoch. GMT is a default timezone.
+
+Params : Timezone eg:- 'GMT'
+
+Returns: NONE
+
+=cut
+
+=item B<get_default_timezone>
+
+Desc   : This method will return timezone which will be used while converting timestamp to epoch
+
+Params : NONE
+
+Returns: Timezone eg:- 'GMT' 
+
+=cut
+
+has 'DefaultTimezone' => (
+    is            => 'rw',
+    isa           => 'Str',
+    writer        => 'set_default_timezone',
+    reader        => 'get_default_timezone',
+    default       => 'GMT',
+    documentation => 'This attribute is used to configure the default timezone'
 );
 
 # ========================================================================== #
@@ -232,9 +414,15 @@ sub read
 {
     my ($self, $fh) = @_;
 
+    return undef if eof $fh;
+
+    my $data = {};
+
     my $line = <$fh>;
 
-    return $self->_read_data($line, $self->_get_config($line));
+    $data = $self->_read_data($line, $self->_get_config($line)) if ($line !~ /^\s+$/);
+
+    return $data;
 }
 
 # This is private method used to read the file and Construct data structure as per StringMapper
@@ -243,7 +431,7 @@ sub _read_data
 
     my ($self, $line, $string_mapper) = @_;
 
-    return undef unless ($line or $string_mapper);
+    return undef if ((not defined $line) or (not defined $string_mapper));
 
     my $concate_string = $self->get_concate_string;
 
@@ -277,6 +465,16 @@ sub _read_data
 
             # To Remove the space before and after string
             $extracted_value =~ s/^\s+|\s+$//g;
+
+            if ($self->{time_to_epoch_fields} && $self->{time_to_epoch_fields}{$field}) {
+
+                my $format =
+                  (defined $string_mapper->{"${field}Pattern"})
+                  ? $string_mapper->{"${field}Pattern"}
+                  : $self->get_default_date_format;
+                my $tz = $string_mapper->{"${field}Timezone"};
+                $extracted_value = $self->_get_time_stamp_to_epoch($extracted_value, $format, $tz);
+            }
 
             # Adding ConcateString between the strings while concatenate
             defined $column_val ? $column_val .= "$concate_string$extracted_value" : $column_val = $extracted_value;
@@ -346,7 +544,10 @@ sub read_all
     my $data;
 
     while (my $line = <$fh>) {
+        next if ($line =~ /^\s+$/);
+
         my $extracted_value = $self->_read_data($line, $self->_get_config($line));
+
         push(@$data, $extracted_value) if ($extracted_value);
     }
 
@@ -398,7 +599,37 @@ sub _get_config
     }
 
     return undef;
+}
 
+# ========================================================================== #
+
+# This method is used to convert the date to epoch using date format
+
+sub _get_time_stamp_to_epoch
+{
+    my ($self, $date, $format, $tz) = @_;
+
+    my $time_zone = $tz || $self->get_default_timezone;
+    my $pattern = $format;
+
+    my $strp = DateTime::Format::Strptime->new(
+        pattern   => $pattern,
+        time_zone => $time_zone
+    );
+
+    my $dt = $strp->parse_datetime($date);
+
+    my $epoch;
+
+    if (defined $dt) {
+
+        $epoch = $dt->epoch;
+
+        if ($epoch !~ /^\d{1,10}$/o) {
+            return undef;
+        }
+    }
+    return $epoch;
 }
 
 1;

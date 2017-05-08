@@ -12,10 +12,10 @@ my %wm = (
 	AUTHOR       => 'Venkatesan Narayanan',
 	VERSION_FROM => 'lib/Text/FixedWidth/Parser.pm',
 	PREREQ_PM    => {
-		'Moose'            => 0,
-		'Math::Expression' => 0,
-		'Test::Most'       => 0,
-		'Test::Class'      => 0,
+		'Moose'            => 2.1804,
+		'Math::Expression' => 1.47,
+		'Test::Most'       => 0.34,
+		'Test::Class'      => 0.50,
 	},
 );
 

@@ -20,24 +20,29 @@ sub startup : Tests(startup => 1)
 
     my $fw_obj = $class->new(
         {
-            StringMapper => {
-                Field1  => [1,   13],
-                Field2  => [14,  100],
-                Field3  => [114, 5],
-                Field4  => [119, 1],
-                Field5  => [120, 10],
-                Field6  => [130, 10],
-                Field7  => [140, 100],
-                Field8  => [305, 4],
-                Field9  => [310, 9],
-                Field10 => [240, 30],
-                Field11 => [278, 5],
-                Field12 => [293, 2],
-                Field13 => [309, 1],
-                Field14 => [270, 8]
+            TimestampToEpochFields => ['Field15'],
+            StringMapper           => {
+                Field1          => [1,   13],
+                Field2          => [14,  100],
+                Field3          => [114, 5],
+                Field4          => [119, 1],
+                Field5          => [120, 10],
+                Field6          => [130, 10],
+                Field7          => [140, 100],
+                Field8          => [305, 4],
+                Field9          => [310, 9],
+                Field10         => [240, 30],
+                Field11         => [278, 5],
+                Field12         => [293, 2],
+                Field13         => [309, 1],
+                Field14         => [270, 8],
+                Field14Pattern  => '%Y%m%d',
+                Field14Timezone => 'America/Chicago'
             }
         }
     );
+
+    $fw_obj->set_timestamp_to_epoch_fields(['Field14']);
 
     $test->{fw_obj} = $fw_obj;
 }
@@ -57,7 +62,7 @@ sub read : Tests(2)
         'Field4'  => '1',
         'Field11' => '1',
         'Field2'  => 'xxxxxxx x xxxxxxx',
-        'Field14' => '20140421',
+        'Field14' => '1398056400',
         'Field6'  => '',
         'Field13' => '5',
         'Field12' => 'El',
@@ -76,7 +81,7 @@ sub read : Tests(2)
         'Field1'  => '000000000002',
         'Field9'  => '142.71000',
         'Field6'  => '1112222222',
-        'Field14' => '20130529',
+        'Field14' => '1369803600',
         'Field12' => 'El',
         'Field7'  => undef,
         'Field8'  => 'MD16',
@@ -124,8 +129,7 @@ sub read_all : Tests(4)
 
     ok(@$data == 2, "Data's filtered correctly based on Rule");
 
-
-	#Multiple String mappers
+    #Multiple String mappers
     my $string_mapper = [
         {
             Rule => {
@@ -158,43 +162,42 @@ sub read_all : Tests(4)
 
     close $fh3;
 
-	my $expected = [
-		{
-			'Address' => {
-				'DoorNo' => '84',
-				'Street' => 'SOUTH STREET'
-			},
-			'Country' => 'USA',
-			'Id' => '001',
-			'Name' => 'XXXXX YYYYYYY'
-		},
-		{
-			'Id' => '001',
-			'Mark1' => '82',
-			'Mark2' => '86',
-			'Mark3' => '98',
-			'Mark4' => '90'
-		},
-		{
-			'Address' => {
-				'DoorNo' => '69',
-				'Street' => 'BELL STREET'
-			},
-			'Country' => 'UK',
-			'Id' => '002',
-			'Name' => 'YYYYYYY'
-		},
-		{
-			'Id' => '002',
-			'Mark1' => '88',
-			'Mark2' => '69',
-			'Mark3' => '89',
-			'Mark4' => '39'
-		}
-	];
+    my $expected = [
+        {
+            'Address' => {
+                'DoorNo' => '84',
+                'Street' => 'SOUTH STREET'
+            },
+            'Country' => 'USA',
+            'Id'      => '001',
+            'Name'    => 'XXXXX YYYYYYY'
+        },
+        {
+            'Id'    => '001',
+            'Mark1' => '82',
+            'Mark2' => '86',
+            'Mark3' => '98',
+            'Mark4' => '90'
+        },
+        {
+            'Address' => {
+                'DoorNo' => '69',
+                'Street' => 'BELL STREET'
+            },
+            'Country' => 'UK',
+            'Id'      => '002',
+            'Name'    => 'YYYYYYY'
+        },
+        {
+            'Id'    => '002',
+            'Mark1' => '88',
+            'Mark2' => '69',
+            'Mark3' => '89',
+            'Mark4' => '39'
+        }
+    ];
 
-	is_deeply($data, $expected, "Test data fetched correctly from file using mulitiple string mapper");
-
+    is_deeply($data, $expected, "Test data fetched correctly from file using mulitiple string mapper");
 
 }
 
